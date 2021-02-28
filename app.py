@@ -136,25 +136,35 @@ def tobs():
 @app.route("/api/v1.0/<start>/<end>")
 
 # When given the start only, calculate TMIN, TAVG, and TMAX for all dates greater than and equal to the start date.
-def v1(start):
+# When given the start and the end date, calculate the TMIN, TAVG, and TMAX for dates between the start and end date inclusive.
+def v1(start, end=None):
 
     # Create our session (link) from Python to the DB
-    station = Base.classes.station
+    measurement = Base.classes.measurement
     session = Session(engine)
 
-    tobs_results = [measurement.station,
+    tobs_results = [measurement.date,
         func.min(measurement.tobs),
         func.avg(measurement.tobs),
         func.max(measurement.tobs)]
-    tobs_query1 = session.query(*tobs_results).\
-    filter(measurement.date >= start).all()
+    if end is None:
+        tobs_query1 = session.query(*tobs_results).\
+        group_by(measurement.date).\
+        filter(measurement.date >= start).all()
+        
+    else:
+        tobs_query1 = session.query(*tobs_results).\
+        group_by(measurement.date).\
+        filter(start < measurement.date).\
+        filter(end > measurement.date).all()
+
     session.close()
     
     # Create a dictionary
     tobs_data1 = []
-    for date, tobs in tobs_query1:
+    for date, tobs_results[1], tobs_results[2], tobs_results[3] in tobs_query1:
         tobs_dict1 = {}
-        tobs_dict1["station"] = tobs_query1[0][0]
+        tobs_dict1["date"] = date
         tobs_dict1["min"] = tobs_query1[0][1]
         tobs_dict1["average"] = tobs_query1[0][2]
         tobs_dict1["max"] = tobs_query1[0][3]
@@ -163,34 +173,7 @@ def v1(start):
     # Return a JSON list of temperature observations (TOBS) for the previous year.
     return jsonify(tobs_data1)
 
-# When given the start and the end date, calculate the TMIN, TAVG, and TMAX for dates between the start and end date inclusive.
-def v1(end):
 
-    # Create our session (link) from Python to the DB
-    station = Base.classes.station
-    session = Session(engine)
-
-    tobs_results = [measurement.station,
-        func.min(measurement.tobs),
-        func.avg(measurement.tobs),
-        func.max(measurement.tobs)]
-    tobs_query2 = session.query(*tobs_results).\
-    filter(measurement.date >= start).\
-    filter(measurement.date <= end).all()
-    session.close()
-    
-    # Create a dictionary
-    tobs_data2 = []
-    for date, tobs in tobs_query2:
-        tobs_dict2 = {}
-        tobs_dict2["station"] = tobs_query2[0][0]
-        tobs_dict2["min"] = tobs_query2[0][1]
-        tobs_dict2["average"] = tobs_query2[0][2]
-        tobs_dict2["max"] = tobs_query2[0][3]
-        tobs_dict2.append(tobs_dict2)
-
-    # Return a JSON list of temperature observations (TOBS) for the previous year.
-    return jsonify(tobs_data2)
 
 
 
