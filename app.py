@@ -170,11 +170,8 @@ def v1(start, end=None):
         tobs_dict1["max"] = tobs_query1[0][3]
         tobs_data1.append(tobs_dict1)
 
-    # Return a JSON list of temperature observations (TOBS) for the previous year.
+    # Return a JSON list
     return jsonify(tobs_data1)
-
-
-
 
 
 if __name__ == "__main__":
